@@ -54,8 +54,10 @@ async function main() {
     result.success = true;
     return result;
   }
-  const image = post.images[post.images.length - 1];
-  const { success: downloadSuccess, fileName } = await downloadImage(image);
+  const image = post.images[post.images.length - 2];
+  const { success: downloadSuccess, fileName } = await downloadImage(
+    image || post.image
+  );
   FILENAME = fileName;
   if (!downloadSuccess) {
     result.message = "image not found";
