@@ -1,0 +1,28 @@
+{
+  "name": "amazon_g_cloth",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "ts-node src/index.ts",
+    "build": "tsc",
+    "serve": "node dist/index.js",
+    "dev": "nodemon --watch src --exec ts-node src/app.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.9.1",
+    "nodemon": "^3.1.7",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.3"
+  },
+  "dependencies": {
+    "amazon-product-scrapper": "^1.1.12",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "twitter-api-v2": "^1.18.2"
+  }
+}
