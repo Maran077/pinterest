@@ -17,8 +17,8 @@ export type ImageStatus = {
 
 function downloadImageToCurrentFolder(url: string): Promise<ImageStatus> {
   return new Promise((resolve, reject) => {
-    const fileName = path.basename(url); // Extract the file name from the URL
-    const filePath = path.join(process.cwd(), fileName); // Use the current working directory
+    const fileName = path.basename(url);
+    const filePath = path.join(process.cwd(), fileName);
 
     const file = fs.createWriteStream(filePath);
 

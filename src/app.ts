@@ -10,10 +10,11 @@ import {
 import { TwitterApi } from "twitter-api-v2";
 import { config } from "dotenv";
 import express from "express";
+import { sendPhoto } from "./telegram";
 config();
 let postDetails: IProduct[] = [];
-let searchWordCatgory = 1;
-let tweetTemplatesIndex = 1;
+let searchWordCatgory = 3;
+let tweetTemplatesIndex = 13;
 let postIndex = 0;
 let FILENAME = "";
 const app = express();
@@ -79,7 +80,7 @@ async function main() {
 
   ${post.titles.join(" ")} 
 
-  ${productLink}  `;
+  Buy Now:${productLink}  `;
 
   const appKey = process.env.APP_KEY;
   const appSecret = process.env.APP_SECRECT;
@@ -92,6 +93,7 @@ async function main() {
     //   "Please set the environment variables APP_KEY, APP_SECRECT, ACCESS_TOKEN, ACCESS_SECRECT"
     // );
     result.message = "Please set the environment variables";
+    await deleteImage(fileName);
     return result;
   }
 
@@ -111,8 +113,20 @@ async function main() {
       text: tweet,
     },
   ]);
-  console.log(tweetId);
+  const postId = tweetId[0].data.id;
+  const url = `https://twitter.com/${process.env.TWITTER_USERNAME}/status/${postId}`;
+  // console.log(tweetId[0].data.id);
+  const bot = `${tweetTemplate}:
 
+  ${post.titles.join(" ")} 
+
+  Buy Now: ${url} `;
+  const BotStatus = await sendPhoto(fileName, bot);
+  if (!BotStatus.success) {
+    await deleteImage(fileName);
+    result.message = BotStatus.message;
+    return result;
+  }
   const { message, success } = await deleteImage(fileName);
   if (!success) {
     result.message = message + " " + tweet;
