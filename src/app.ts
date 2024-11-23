@@ -11,6 +11,7 @@ import { TwitterApi } from "twitter-api-v2";
 import { config } from "dotenv";
 import express from "express";
 import { sendPhoto } from "./telegram";
+import { getRedditPost } from "./memeTelegram";
 config();
 let postDetails: IProduct[] = [];
 let searchWordCatgory = 3;
@@ -121,7 +122,8 @@ async function main() {
   ${post.titles.join(" ")} 
 
   Buy Now: ${url} `;
-  const BotStatus = await sendPhoto(fileName, bot);
+  const chatId: string = "@ethnic_threads";
+  const BotStatus = await sendPhoto(fileName, bot, chatId);
   if (!BotStatus.success) {
     await deleteImage(fileName);
     result.message = BotStatus.message;
@@ -162,6 +164,76 @@ app.get("/", async (req, res) => {
     res.json({ success: false, error: "error happen" });
   }
   // const message = response.success ? "ok" : "fail";
+});
+let TelegramMeme = "";
+const uploadTelegramMeme = async (reddit: string) => {
+  const { imageUrl, message, success, text } = await getRedditPost(reddit);
+  const result = { success: false, message: "" };
+
+  if (!success) {
+    result.message = message;
+    return result;
+  }
+  // const chatId: string = "@ethnic_threads";
+  const {
+    fileName,
+    success: mediaSuccess,
+    url,
+  } = await downloadImage(imageUrl);
+  if (!mediaSuccess) {
+    result.message = "image not found";
+    return result;
+  }
+
+  TelegramMeme = fileName;
+  const chatTemplete = `
+  ${text}
+  See more at https://x.com/MemeMaze121868
+  `;
+  const { message: photoMessage, success: photoSuccess } = await sendPhoto(
+    fileName,
+    chatTemplete,
+    "@funnymeme01"
+  );
+  if (!photoSuccess) {
+    result.message = photoMessage;
+    await deleteImage(fileName);
+    return result;
+  }
+  const { message: deleteMessage, success: deleteSuccess } = await deleteImage(
+    fileName
+  );
+  if (!deleteSuccess) {
+    result.message = deleteMessage;
+    return result;
+  }
+  result.success = true;
+  result.message = "meme upload successfully";
+  return result;
+};
+
+app.get("/telegram/:reddit", async (req, res) => {
+  const reddit = req.params.reddit;
+  const result = { success: false, message: "" };
+  if (!reddit) {
+    result.message = "reddit not found";
+    res.json(result);
+    return;
+  }
+  try {
+    const { message, success } = await uploadTelegramMeme(reddit);
+    result.message = message;
+    result.success = success;
+    res.json(result);
+  } catch (error) {
+    console.log(error);
+    if (TelegramMeme) {
+      await deleteImage(TelegramMeme);
+    }
+    result.message = "error happen";
+    result.success = false;
+    res.json(result);
+  }
 });
 
 app.get("/test", async (req, res) => {

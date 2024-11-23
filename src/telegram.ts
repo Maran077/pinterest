@@ -10,10 +10,9 @@ const token: string = process.env.TELEGRAM_BOT_TOKEN || "";
 const bot = new TelegramBot(token, { polling: false });
 
 // Replace with your channel username (e.g., @your_channel_name)
-const chatId: string = "@ethnic_threads";
 
 // Function to send a message
-const sendMessage = async (message: string): Promise<void> => {
+const sendMessage = async (message: string, chatId: string): Promise<void> => {
   try {
     await bot.sendMessage(chatId, message);
     console.log("Message sent successfully!");
@@ -26,7 +25,8 @@ export type BotStatus = { success: boolean; message: string };
 // Function to send a photo
 export const sendPhoto = async (
   photoPath: string,
-  caption: string
+  caption: string,
+  chatId: string
 ): Promise<BotStatus> => {
   const result = { success: false, message: "" };
   try {
