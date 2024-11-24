@@ -12,6 +12,7 @@ import { config } from "dotenv";
 import express from "express";
 import { sendPhoto } from "./telegram";
 import { getRedditPost } from "./memeTelegram";
+import Snoowrap from "snoowrap";
 config();
 let postDetails: IProduct[] = [];
 let searchWordCatgory = 3;
@@ -24,6 +25,14 @@ type Res = {
   success: boolean;
   message: string;
 };
+
+const reddit = new Snoowrap({
+  userAgent: process.env.USER_AGENT || "",
+  clientId: process.env.CLIENT_ID || "",
+  clientSecret: process.env.CLIENT_SECRET || "",
+  username: process.env.USER_NAME || "",
+  password: process.env.PASSWORD || "",
+});
 async function main() {
   const result: Res = {
     message: "something is wrongg",
@@ -119,11 +128,38 @@ async function main() {
   // console.log(tweetId[0].data.id);
   const bot = `${tweetTemplate}:
 
-  ${post.titles.join(" ")} 
+${post.titles.join(" ")} 
 
   Buy Now: ${url} `;
   const chatId: string = "@ethnic_threads";
   const BotStatus = await sendPhoto(fileName, bot, chatId);
+
+  const redditText = `${tweetTemplate}:
+${post.titles.join(" ")} 
+  `;
+  const subReddits = [
+    {
+      name: "AmazonFC",
+      flag: "Amazon Stores",
+    },
+    {
+      name: "AmazonBudgetFinds",
+      flag: "",
+    },
+  ];
+  for (const link of subReddits) {
+    await reddit
+      .getSubreddit(link.name)
+      .submitLink({
+        title: redditText,
+        url: url,
+        flairText: link.flag,
+        subredditName: link.name,
+      })
+      .then((result) => {
+        // handle the result
+      });
+  }
   if (!BotStatus.success) {
     await deleteImage(fileName);
     result.message = BotStatus.message;
@@ -150,18 +186,25 @@ async function main() {
 // // name();
 // // name();
 
-app.get("/", async (req, res) => {
-  try {
-    const response = await main();
-    res.json(response);
-  } catch (error) {
-    if (FILENAME) {
-      const { message, success } = await deleteImage(FILENAME);
-      FILENAME = "";
-    }
-    console.log(error);
+app.get("/:id", async (req, res) => {
+  const id = req.params.id;
+  console.log(id);
 
-    res.json({ success: false, error: "error happen" });
+  if (id != "upload" || !id) {
+    res.json({ success: false, message: "no query" });
+  } else {
+    try {
+      const response = await main();
+      res.json(response);
+    } catch (error) {
+      if (FILENAME) {
+        const { message, success } = await deleteImage(FILENAME);
+        FILENAME = "";
+      }
+      console.log(error);
+
+      res.json({ success: false, error: "error happen" });
+    }
   }
   // const message = response.success ? "ok" : "fail";
 });
@@ -188,6 +231,7 @@ const uploadTelegramMeme = async (reddit: string) => {
   TelegramMeme = fileName;
   const chatTemplete = `
   ${text}
+
   See more at https://x.com/MemeMaze121868
   `;
   const { message: photoMessage, success: photoSuccess } = await sendPhoto(
