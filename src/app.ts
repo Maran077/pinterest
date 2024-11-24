@@ -153,7 +153,7 @@ ${post.titles.join(" ")}
       .submitLink({
         title: redditText,
         url: url,
-        // flairText: link.flag,
+        flairId: link.flag,
         subredditName: link.name,
       })
       .then((result) => {
